@@ -5,13 +5,11 @@
         免费用户
         <div class="tip">
           升级付费会员可解锁更多云存储
-          <a href="https://img.jue.sh">
-            <el-button size="mini" type="text">马上升级</el-button>
-          </a>
+          <el-button @click="changeCharge" size="mini" type="text">马上升级</el-button>
         </div>
       </el-form-item>
       <el-form-item label="默认存储">
-        <el-select placeholder="请选择" v-model="value" size=small>
+        <el-select placeholder="请选择" v-model="value">
           <el-option
             :disabled="item.disabled"
             :key="item.value"
@@ -26,16 +24,27 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="Markdown">
+        <el-switch v-model="isMarkdown"></el-switch>
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" plain size="mini">退出登陆</el-button>
+        <el-button plain type="primary">退出登陆</el-button>
       </el-form-item>
     </el-form>
+
+    <Charge :chargeVisible="chargeVisible" @changeCharge="changeCharge"></Charge>
   </div>
 </template>
 <script>
+import Charge from '@/components/option/Charge.vue'
 export default {
+  components: {
+    Charge
+  },
   data() {
     return {
+      chargeVisible: false,
+      isMarkdown: false,
       options: [
         {
           value: 'weibo',
@@ -67,6 +76,11 @@ export default {
         }
       ],
       value: 'weibo'
+    }
+  },
+  methods: {
+    changeCharge() {
+      this.chargeVisible = !this.chargeVisible
     }
   }
 }

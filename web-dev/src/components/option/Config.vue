@@ -2,10 +2,7 @@
   <div class="config-wrapper">
     <div class="warning-wrapper">
       <el-alert :closable="false" type="warning">
-        您还不是付费用户，无法自定义云存储
-        <a href="https://img.jue.sh">
-          <el-button size="mini" type="text">马上升级</el-button>
-        </a>
+        您还不是付费用户，无法自定义云存储 <el-button size="mini" type="text" @click="changeCharge">马上升级</el-button>
       </el-alert>
     </div>
 
@@ -17,12 +14,19 @@
         </span>
       </el-tab-pane>
     </el-tabs>
+
+    <Charge :chargeVisible="chargeVisible" @changeCharge="changeCharge"></Charge>
   </div>
 </template>
 <script>
+import Charge from '@/components/option/Charge.vue'
 export default {
+  components:{
+    Charge
+  },
   data() {
     return {
+      chargeVisible: false,
       options: [
         {
           value: 'qiniu',
@@ -45,6 +49,11 @@ export default {
           disabled: true
         }
       ]
+    }
+  },
+  methods:{
+    changeCharge(){
+      this.chargeVisible = !this.chargeVisible
     }
   }
 }

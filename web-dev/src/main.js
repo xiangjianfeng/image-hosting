@@ -6,7 +6,8 @@ import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 Vue.use(ElementUI)
-
+import clipboard from 'clipboard'
+Vue.prototype.clipboard = clipboard
 Vue.config.productionTip = false
 
 new Vue({
