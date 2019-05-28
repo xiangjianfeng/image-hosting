@@ -9,6 +9,7 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  transition: all 0.5s linear 0s;
 }
 ::-webkit-scrollbar {
   display: none;

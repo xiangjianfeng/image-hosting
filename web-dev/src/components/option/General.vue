@@ -2,14 +2,29 @@
   <div class="general-wrapper">
     <el-form label-width="80px" ref="form">
       <el-form-item label="用户等级">
-        免费用户
-        <div class="tip">
-          升级付费会员可解锁更多云存储
-          <el-button @click="changeCharge" size="mini" type="text">马上升级</el-button>
+        <div v-if="isvip">
+          <span>VIP用户</span>
+          <div class="tip">
+            您的VIP服务最后截止时间为:
+            <strong style="margin-right:20px; color:#606266;">{{endtime}}</strong>
+            <el-button @click="changeCharge" size="mini" type="text">马上续费</el-button>
+          </div>
+        </div>
+
+        <div v-else>
+          <span>免费用户</span>
+          <div class="tip" v-if="endtime != ''">
+            您的会员已于 <strong>{{endtime}}</strong> 过期，
+            <el-button @click="changeCharge" size="mini" type="text">现在续费</el-button> 使用更多云存储
+          </div>
+          <div class="tip" v-else>
+            升级付费会员可解锁更多云存储
+            <el-button @click="changeCharge" size="mini" type="text">马上升级</el-button>
+          </div>
         </div>
       </el-form-item>
       <el-form-item label="默认存储">
-        <el-select placeholder="请选择" v-model="value">
+        <el-select @change="setDefcloud" placeholder="请选择" v-model="defcloud">
           <el-option
             :disabled="item.disabled"
             :key="item.value"
@@ -25,10 +40,10 @@
         </el-select>
       </el-form-item>
       <el-form-item label="Markdown">
-        <el-switch v-model="isMarkdown"></el-switch>
+        <el-switch @change="setMarkdown" v-model="isMarkdown"></el-switch>
       </el-form-item>
       <el-form-item>
-        <el-button plain type="primary">退出登陆</el-button>
+        <el-button @click="logout" plain type="primary">退出登陆</el-button>
       </el-form-item>
     </el-form>
 
@@ -37,6 +52,7 @@
 </template>
 <script>
 import Charge from '@/components/option/Charge.vue'
+import axios from 'axios'
 export default {
   components: {
     Charge
@@ -44,7 +60,6 @@ export default {
   data() {
     return {
       chargeVisible: false,
-      isMarkdown: false,
       options: [
         {
           value: 'weibo',
@@ -75,12 +90,70 @@ export default {
           disabled: true
         }
       ],
-      value: 'weibo'
+      endtime: '',
+      isvip: 0, //是否VIP
+      defcloud: 'smms', //默认图床
+      isMarkdown: 1 //是否输出markdown
     }
   },
+  mounted() {
+    this.init()
+  },
   methods: {
+    init() {
+      let _this = this
+      axios
+        .get('/juetool/user/info', {
+          headers: {
+            Authorization: localStorage.getItem('JUE_TOKEN')
+          }
+        })
+        .then(res => {
+          //console.log(res.data)
+          if (res.data.status != undefined && res.data.status == false) {
+            this.logout()
+          } else {
+            _this.isvip = parseInt(res.data.isvip)
+            _this.endtime = res.data.endtime
+            _this.isMarkdown = res.data.markdown == 1 ? true : false
+            _this.defcloud = res.data.defcloud
+            if(_this.isvip == 0){
+              if(res.data.defcloud != 'weibo' && res.data.defcloud != 'smms'){
+                _this.defcloud = 'smms'
+              }
+            }
+          }
+        })
+    },
     changeCharge() {
       this.chargeVisible = !this.chargeVisible
+    },
+
+    logout() {
+      localStorage.removeItem('JUE_TOKEN')
+      this.$router.push({ path: '/login' })
+    },
+
+    setGeneral(json) {
+      //let defjson = { unionid: localStorage.getItem('JUE_TOKEN') }
+      //let obj = Object.assign(defjson, json)
+      axios
+        .post('/juetool/user/setgeneral', json, {
+          headers: {
+            Authorization: localStorage.getItem('JUE_TOKEN')
+          }
+        })
+        .then(res => {
+          console.log(res.data)
+        })
+    },
+    setDefcloud() {
+      this.setGeneral({ defcloud: this.defcloud })
+    },
+
+    setMarkdown() {
+      let markdown = this.isMarkdown ? 1 : 0
+      this.setGeneral({ markdown: markdown })
     }
   }
 }

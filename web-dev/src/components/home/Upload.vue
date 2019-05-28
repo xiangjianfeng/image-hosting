@@ -117,12 +117,15 @@
         </div>
       </div>
     </div>
+    <div id="paste"></div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
 import { setTimeout } from 'timers'
+import ImageClipboard from '@/assets/js/imageClipboard.js'
+import b64toBlob from '@/assets/js/b64toBlob'
 export default {
   name: 'app',
   data() {
@@ -131,9 +134,11 @@ export default {
       value1: 0,
       value2: 1,
       imgUrl: '',
-      uptoken: null,
       status: 'wait',
-      copyBtn: null
+      copyBtn: null,
+
+      defcloud: 'smms',
+      upToken: ''
     }
   },
   computed: {
@@ -142,24 +147,30 @@ export default {
     }
   },
   mounted() {
-    this.getUpToken()
     this.pasteUpload()
+    this.uploadToken()
     this.copyBtn = new this.clipboard(this.$refs.copy)
   },
   methods: {
+    uploadToken() {
+      let _this = this
+      axios
+        .get('/juetool/user/upload', {
+          headers: {
+            Authorization: localStorage.getItem('JUE_TOKEN')
+          }
+        })
+        .then(res => {
+          _this.defcloud = res.data.defcloud
+          _this.upToken = res.data.upToken
+        })
+    },
     setDefault() {
       this.percent = 0
       this.value1 = 0
       this.value2 = 0
       this.imgUrl = ''
       this.status = 'wait'
-    },
-    getUpToken() {
-      axios.get('https://api.jue.sh/qiniu/qiniu/token').then(response => {
-        if (response.status == 200) {
-          this.uptoken = response.data.upload_token
-        }
-      })
     },
     copySuccess() {
       this.copyBtn.on('success', e => {
@@ -174,51 +185,54 @@ export default {
     },
     pasteUpload() {
       //粘贴上传
-      document.addEventListener('paste', e => {
+      const clipboard = new ImageClipboard('#paste')
+      clipboard.onpaste = base64 => {
         this.setDefault()
-        for (let i = 0; i < e.clipboardData.items.length; i++) {
-          if (
-            e.clipboardData.items[i].kind == 'file' &&
-            /image\//.test(e.clipboardData.items[i].type)
-          ) {
-            let file = e.clipboardData.items[i].getAsFile()
-            this.uploadImgToQiniu(file)
-            e.preventDefault()
-            break
-          }
-        }
-      })
-    },
-
-    getFileExt(fileName) {
-      return fileName.substring(fileName.lastIndexOf('.') + 1)
+        this.upload(b64toBlob(base64))
+      }
     },
     uploadInputchange() {
       let file = document.getElementById('file-upload').files[0]
-      this.uploadImgToQiniu(file)
+      console.log('选择上传')
+      console.log(file)
+      this.upload(file)
     },
-    uploadImgToQiniu(file) {
-      const axiosInstance = axios.create({ withCredentials: false }) //withCredentials 禁止携带cookie，带cookie在七牛上有可能出现跨域问题
+    upload(file) {
+      let _this = this
+      switch (_this.defcloud) {
+        case 'weibo':
+          break
+        default:
+          _this.upToSmms(file)
+      }
+    },
+
+    upToSmms(file) {
+      let _this = this
+      const axiosInstance = axios.create({ withCredentials: false })
       let data = new FormData()
-      data.append('token', this.uptoken) //七牛需要的token，叫后台给，是七牛账号密码等组成的hash
-      data.append('file', file)
-      data.append(
-        'key',
-        new Date().getTime() + '.' + this.getFileExt(file.name)
-      )
-      axiosInstance({
-        method: 'POST',
-        url: 'https://upload.qbox.me', //上传地址
-        data: data,
-        onUploadProgress: progressEvent => {
-          this.status = 'uploading'
-          this.percent =
-            ((progressEvent.loaded * 100) / progressEvent.total) * 0.01
-        }
-      }).then(data => {
-        this.status = 'done'
-        if (data.status == 200) {
-          this.imgUrl = 'https://filecdn.jue.sh/' + data.data.key
+      data.append('smfile', file)
+      // axiosInstance({
+      //   method: 'POST',
+      //   url: 'https://sm.ms/api/upload', //上传地址
+      //   data: data,
+      //   onUploadProgress: progressEvent => {
+      //     this.status = 'uploading'
+      //     this.percent =
+      //       ((progressEvent.loaded * 100) / progressEvent.total) * 0.01
+      //   }
+      // }).then(res => {
+      //   this.status = 'done'
+      //   if (data.status == 200) {
+      //     this.imgUrl = res.data.url
+      //   }
+      // })
+
+      axios.post('https://sm.ms/api/upload', data).then(res => {
+        console.log(res)
+        if (res.status == 200) {
+          this.status = 'done'
+          _this.imgUrl = res.data.data.url
         }
       })
     }
@@ -360,6 +374,15 @@ export default {
       }
     }
   }
+}
+
+#paste {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 @-webkit-keyframes bo {

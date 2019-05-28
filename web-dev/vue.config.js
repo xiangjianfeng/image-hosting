@@ -1,6 +1,7 @@
 module.exports = {
   publicPath: './',
   devServer: {
-    // https: true
+    https: true,
+    proxy: 'https://api.jue.sh'
   }
 }
