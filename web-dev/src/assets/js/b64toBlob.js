@@ -1,6 +1,6 @@
 // see here: https://stackoverflow.com/a/16245768/2655348
 
-const b64toBlob = (b64Data, contentType='UTF-8', sliceSize=512) => {
+const b64toBlob = (b64Data, contentType, sliceSize=1024) => {
   const byteCharacters = atob(b64Data);
   const byteArrays = [];
 

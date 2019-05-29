@@ -54,9 +54,9 @@
       <div class="url-box">
         <div class="copy-url" v-show="imgUrl">
           <div class="input-group">
-            <input @focus="focus($event)" class="input-sm" readonly type="text" v-model="imgUrl">
+            <input @focus="focus($event)" class="input-sm" readonly type="text" v-model="showText">
             <div
-              :data-clipboard-text="imgUrl"
+              :data-clipboard-text="showText"
               @click="copySuccess"
               class="input-group-button"
               ref="copy"
@@ -87,21 +87,63 @@
           </div>
         </div>
       </div>
+      <input
+        @change="uploadInputchange"
+        accept="image/*"
+        class="none"
+        id="btn-upload"
+        type="file"
+        v-if="status == 'waitting'"
+      >
     </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import b64toBlob from '@/assets/js/b64toBlob.js'
 export default {
   data() {
     return {
       status: 'waitting', //waitting:上传前 uploading:上传中 done:上传成功后
-      imgUrl: '' //图片地址
+      imgUrl: '', //图片地址
+      defcloud: 'smms',
+      isMarkdown: 0
+    }
+  },
+  computed: {
+    markdown() {
+      return `![](${this.imgUrl})`
+    },
+
+    showText() {
+      return this.isMarkdown ? this.markdown : this.imgUrl
     }
   },
   mounted() {
+    axios
+      .get('/juetool/user/info', {
+        headers: {
+          Authorization: localStorage.getItem('JUE_TOKEN')
+        }
+      })
+      .then(res => {
+        //console.log(res.data)
+        if (res.data.status != undefined && res.data.status == false) {
+          this.logout()
+        } else {
+          this.isMarkdown = res.data.markdown == 1 ? true : false
+          this.defcloud = res.data.defcloud
+          if (parseInt(res.data.isvip) == 0) {
+            if (res.data.defcloud != 'weibo' && res.data.defcloud != 'smms') {
+              this.defcloud = 'smms'
+            }
+          }
+        }
+      })
+
     this.copyBtn = new this.clipboard(this.$refs.copy)
+    this.pasteUpload()
   },
   methods: {
     focus(event) {
@@ -115,7 +157,58 @@ export default {
         }, 800)
       })
     },
-    setDefault() {}
+
+    setDefault() {
+      this.status = 'waitting'
+      this.imgUrl = ''
+    },
+    //粘贴上传
+    pasteUpload() {
+      let _this = this
+      document.addEventListener('paste', e => {
+        this.status = 'uploading'
+        if (e.clipboardData.items[0].type.indexOf('image') > -1) {
+          let reader = new FileReader(),
+            file = e.clipboardData.items[0].getAsFile()
+          reader.onload = function(e) {
+            let file = this.result
+            let b64Data = file.replace('data:image/png;base64,', '')
+            _this.upload(b64toBlob(b64Data))
+          }
+          reader.readAsDataURL(file)
+        }
+      })
+    },
+    //选择文件上传
+    uploadInputchange() {
+      let file = document.getElementById('btn-upload').files[0]
+      this.status = 'uploading'
+      this.upload(file)
+    },
+    //上传分类
+    upload(file) {
+      switch (this.defcloud) {
+        case 'weibo':
+          console.log('weibo')
+          break
+
+        default:
+          this.upToSmms(file)
+      }
+    },
+    //上传到SM.MS
+    upToSmms(file) {
+      let _this = this
+      const axiosInstance = axios.create({ withCredentials: false })
+      let data = new FormData()
+      data.append('smfile', file)
+      axios.post('https://sm.ms/api/upload', data).then(res => {
+        if (res.status == 200 && res.data.code == 'success') {
+          _this.status = 'done'
+          _this.imgUrl = res.data.data.url
+        }
+      })
+    }
   }
 }
 </script>
@@ -165,6 +258,7 @@ export default {
   padding: 10px;
 }
 .container {
+  position: relative;
   width: 430px;
   height: 330px;
   background: #fff url(https://filecdn.jue.sh/box/imgs/bg.svg);
@@ -228,16 +322,19 @@ export default {
   color: #5e6878;
   margin-top: 30px;
   font-size: 14px;
+  span {
+    user-select: none;
+    -webkit-user-select: none;
+  }
 }
 
-.url-box{
+.url-box {
   height: 43px;
   width: 80%;
   margin-top: 15px;
 }
 
 .copy-url {
-  
   padding-left: 36px;
   display: flex;
   align-items: center;
@@ -318,5 +415,16 @@ export default {
     transform: scale(1.5);
     border: 1px solid rgba(199, 207, 215, 0.1);
   }
+}
+
+#btn-upload {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  outline: none;
+  cursor: pointer;
+  opacity: 0;
 }
 </style>

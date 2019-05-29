@@ -212,22 +212,6 @@ export default {
       const axiosInstance = axios.create({ withCredentials: false })
       let data = new FormData()
       data.append('smfile', file)
-      // axiosInstance({
-      //   method: 'POST',
-      //   url: 'https://sm.ms/api/upload', //上传地址
-      //   data: data,
-      //   onUploadProgress: progressEvent => {
-      //     this.status = 'uploading'
-      //     this.percent =
-      //       ((progressEvent.loaded * 100) / progressEvent.total) * 0.01
-      //   }
-      // }).then(res => {
-      //   this.status = 'done'
-      //   if (data.status == 200) {
-      //     this.imgUrl = res.data.url
-      //   }
-      // })
-
       axios.post('https://sm.ms/api/upload', data).then(res => {
         console.log(res)
         if (res.status == 200) {
