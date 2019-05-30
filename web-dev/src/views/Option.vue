@@ -2,25 +2,34 @@
   <div class="wrapper border-wrapper">
     <el-tabs type="card" v-model="activeName">
       <el-tab-pane label="常规" name="general">
-        <General></General>
+        <General @changeCharge="changeCharge"></General>
       </el-tab-pane>
       <el-tab-pane label="图床配置" name="config">
         <Config></Config>
       </el-tab-pane>
     </el-tabs>
+    <Charge :chargeVisible="chargeVisible"></Charge>
   </div>
 </template>
 <script>
 import General from '@/components/option/General.vue'
 import Config from '@/components/option/Config.vue'
+import Charge from '@/components/option/Charge.vue'
 export default {
   components: {
     General,
-    Config
+    Config,
+    Charge
   },
   data() {
     return {
-      activeName: 'general'
+      chargeVisible: false,
+      activeName: 'config'
+    }
+  },
+  methods: {
+    changeCharge() {
+      this.chargeVisible = !this.chargeVisible
     }
   }
 }

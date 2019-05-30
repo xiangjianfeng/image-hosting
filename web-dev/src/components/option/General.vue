@@ -46,28 +46,23 @@
         <el-button @click="logout" plain type="primary">退出登陆</el-button>
       </el-form-item>
     </el-form>
-
-    <Charge :chargeVisible="chargeVisible" @changeCharge="changeCharge"></Charge>
   </div>
 </template>
 <script>
-import Charge from '@/components/option/Charge.vue'
 import axios from 'axios'
 export default {
-  components: {
-    Charge
-  },
   data() {
     return {
       chargeVisible: false,
       options: [
         {
-          value: 'weibo',
-          label: '新浪微博'
-        },
-        {
           value: 'smms',
           label: 'SM.MS'
+        },
+        {
+          value: 'weibo',
+          label: '新浪微博',
+          disabled: true
         },
         {
           value: 'qiniu',
@@ -100,6 +95,9 @@ export default {
     this.init()
   },
   methods: {
+    changeCharge(){
+      this.$emit('changeCharge')
+    },
     init() {
       let _this = this
       axios
@@ -125,15 +123,10 @@ export default {
           }
         })
     },
-    changeCharge() {
-      this.chargeVisible = !this.chargeVisible
-    },
-
     logout() {
       localStorage.removeItem('JUE_TOKEN')
       this.$router.push({ path: '/login' })
     },
-
     setGeneral(json) {
       //let defjson = { unionid: localStorage.getItem('JUE_TOKEN') }
       //let obj = Object.assign(defjson, json)

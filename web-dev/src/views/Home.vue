@@ -259,6 +259,7 @@ export default {
 }
 .container {
   position: relative;
+  overflow: hidden;
   width: 430px;
   height: 330px;
   background: #fff url(https://filecdn.jue.sh/box/imgs/bg.svg);
@@ -300,9 +301,11 @@ export default {
 
   .svg-box {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
+    padding: 10px;
     overflow: hidden;
+    border-radius: 50%;
     svg {
       &.upload-icon {
         width: 100%;
@@ -398,10 +401,10 @@ export default {
 }
 @keyframes up {
   0% {
-    transform: translateY(80%);
+    transform: translateY(100%);
   }
   100% {
-    transform: translateY(-80%);
+    transform: translateY(-100%);
   }
 }
 
