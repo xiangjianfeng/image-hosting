@@ -133,7 +133,7 @@ export default {
   },
   mounted() {
     axios
-      .get('/img/user/info', {
+      .get('https://api.jue.sh/img/user/info', {
         headers: {
           Authorization: localStorage.getItem('JUE_TOKEN')
         }
@@ -184,7 +184,7 @@ export default {
     },
     setGeneral(json) {
       axios
-        .post('/img/user/setgeneral', json, {
+        .post('https://api.jue.sh/img/user/setgeneral', json, {
           headers: {
             Authorization: localStorage.getItem('JUE_TOKEN')
           }
@@ -276,7 +276,7 @@ export default {
       let _this = this
       axios
         .post(
-          '/img/user/upload',
+          'https://api.jue.sh/img/user/upload',
           {
             base64: file
           },

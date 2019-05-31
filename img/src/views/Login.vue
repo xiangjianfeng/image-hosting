@@ -87,7 +87,7 @@ export default {
             //如果数据库中有了就直接返回数据，无则添加用户信息
             //console.log(response.data)
             axios
-              .post('/img/user/info', {
+              .post('https://api.jue.sh/img/user/info', {
                 openid: response.data.openid,
                 unionid: response.data.unionid,
                 nickname: response.data.nickname,
